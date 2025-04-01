@@ -1,0 +1,11 @@
+doctype html 
+html 
+  head 
+    title danh sach tour
+  body 
+    div header 
+    h1 danh sach tour
+    ul 
+      each item in tourLists 
+        li #{item.name} (phương tiện: #{item.vehicle})
+    div footer
