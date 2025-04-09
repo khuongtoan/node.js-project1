@@ -4,7 +4,9 @@ const path = require("path");
 require("dotenv").config();
 const database = require("./config/database-config");
 const clientRoutes = require("./routes/client/index-route");
+const adminRoutes = require("./routes/admin/index-route");
 const homeController = require("./controllers/client/home-controller");
+const variableConfig = require("./config/variable-config");
 
 // thiết lập port và khai báo instance để sử dụng express
 const app = express();
@@ -19,7 +21,11 @@ app.set("view engine", "pug");
 // thiết lập thư mục chứ file tĩnh của fontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// thiết lập route
+// tạo biến toàn cục
+app.locals.pathAdmin = variableConfig.pathAdmin;
+
+// thiết lập đường dẫn
+app.use(`/${variableConfig.pathAdmin}`, adminRoutes);	
 app.use("/", clientRoutes);
 
 app.listen(port, () => {
