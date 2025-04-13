@@ -1,7 +1,6 @@
 const AccountAdmin = require("../../models/account-admin-model");
 const bcrypt = require("bcryptjs");
 
-
 module.exports.login = async (req, res) => {
 	res.render("admin/pages/login", {
 		pageTitle: "Đăng nhập",
@@ -45,6 +44,45 @@ module.exports.registerPost = async (req, res) => {
 	res.json({
 		code: "success",
 		message: "Đăng ký tài khoản thành công!",
+	});
+};
+
+module.exports.loginPost = async (req, res) => {
+	const { email, password } = req.body;
+
+	const existAccount = await AccountAdmin.findOne({
+		email: email,
+	});
+	
+	if (!existAccount) {
+		res.json({
+			code: "error",
+			message: "Email không tồn tại trong hệ thống!"
+		});
+		return;
+	}
+
+	const isPasswordValid = await bcrypt.compare(password, existAccount.password);
+
+	if (!isPasswordValid) {
+		res.json({
+			code: "error",
+			message: "Mật khẩu không đúng!",
+		});
+		return;
+	}
+
+	if (existAccount.status != "active") {
+		res.json({
+			code: "error",
+			message: "Tài khoản chưa được kích hoạt!",
+		});
+		return;
+	}
+
+	return res.json({
+		code: "success",
+		message: "đăng nhập thành công",
 	});
 };
 

@@ -13,6 +13,12 @@ router.post(
   accountController.registerPost
 );
 
+router.post(
+  "/login",
+  accountValidate.loginPost,
+  accountController.loginPost
+);
+
 router.get("/forgot-password", accountController.forgotPassword);
 
 router.get("/register-initial", accountController.registerInitial);
