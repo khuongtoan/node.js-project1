@@ -1,6 +1,7 @@
 const AccountAdmin = require("../../models/account-admin-model");
 const bcrypt = require("bcryptjs");
 
+
 module.exports.login = async (req, res) => {
 	res.render("admin/pages/login", {
 		pageTitle: "Đăng nhập",
