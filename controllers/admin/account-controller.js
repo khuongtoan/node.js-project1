@@ -1,5 +1,6 @@
 const AccountAdmin = require("../../models/account-admin-model");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 module.exports.login = async (req, res) => {
 	res.render("admin/pages/login", {
@@ -53,11 +54,11 @@ module.exports.loginPost = async (req, res) => {
 	const existAccount = await AccountAdmin.findOne({
 		email: email,
 	});
-	
+
 	if (!existAccount) {
 		res.json({
 			code: "error",
-			message: "Email không tồn tại trong hệ thống!"
+			message: "Email không tồn tại trong hệ thống!",
 		});
 		return;
 	}
@@ -79,6 +80,25 @@ module.exports.loginPost = async (req, res) => {
 		});
 		return;
 	}
+
+	// tạo JWT
+	const token = jwt.sign(
+		{
+			id: existAccount.id,
+			email: existAccount.email,
+		},
+		process.env.JWT_SECRET,
+		{
+			expiresIn: "1d", //token có thời hạn 1 ngày
+		},
+	);
+
+	// lưu token vào cookie
+	res.cookie("token", token, {
+		maxAge: 24 * 60 * 60 * 1000,
+		httpOnly: true,
+		sameSite: "strict",
+	});
 
 	return res.json({
 		code: "success",
