@@ -49,7 +49,7 @@ module.exports.registerPost = async (req, res) => {
 };
 
 module.exports.loginPost = async (req, res) => {
-	const { email, password } = req.body;
+	const { email, password, rememberPassword } = req.body;
 
 	const existAccount = await AccountAdmin.findOne({
 		email: email,
@@ -74,7 +74,7 @@ module.exports.loginPost = async (req, res) => {
 	}
 
 	if (existAccount.status != "active") {
-		res.json({
+		res.json({ 
 			code: "error",
 			message: "Tài khoản chưa được kích hoạt!",
 		});
@@ -89,13 +89,13 @@ module.exports.loginPost = async (req, res) => {
 		},
 		process.env.JWT_SECRET,
 		{
-			expiresIn: "1d", //token có thời hạn 1 ngày
+			expiresIn: rememberPassword ?"30d" : '1d', //token có thời hạn 30 or 1 ngày
 		},
 	);
 
 	// lưu token vào cookie
 	res.cookie("token", token, {
-		maxAge: 24 * 60 * 60 * 1000,
+		maxAge: rememberPassword ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 ,
 		httpOnly: true,
 		sameSite: "strict",
 	});
