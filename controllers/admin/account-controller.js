@@ -1,6 +1,11 @@
 const AccountAdmin = require("../../models/account-admin-model");
+const ForgotPassword = require("../../models/forgot-password-model");
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mailHelper = require("../../helpers/mail-helper");
+
+const generateHelper = require("../../helpers/generate-helper");
 
 module.exports.login = async (req, res) => {
 	res.render("admin/pages/login", {
@@ -74,7 +79,7 @@ module.exports.loginPost = async (req, res) => {
 	}
 
 	if (existAccount.status != "active") {
-		res.json({ 
+		res.json({
 			code: "error",
 			message: "Tài khoản chưa được kích hoạt!",
 		});
@@ -89,13 +94,13 @@ module.exports.loginPost = async (req, res) => {
 		},
 		process.env.JWT_SECRET,
 		{
-			expiresIn: rememberPassword ?"30d" : '1d', //token có thời hạn 30 or 1 ngày
+			expiresIn: rememberPassword ? "30d" : "1d", //token có thời hạn 30 or 1 ngày
 		},
 	);
 
 	// lưu token vào cookie
 	res.cookie("token", token, {
-		maxAge: rememberPassword ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 ,
+		maxAge: rememberPassword ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
 		httpOnly: true,
 		sameSite: "strict",
 	});
@@ -115,6 +120,55 @@ module.exports.registerInitial = async (req, res) => {
 module.exports.forgotPassword = async (req, res) => {
 	res.render("admin/pages/forgot-password", {
 		pageTitle: "Quên mật khẩu",
+	});
+};
+
+module.exports.forgotPasswordPost = async (req, res) => {
+	const { email } = req.body;
+
+	//kiểm tra email có tồn tại trong hệ thống ko
+	const existAccount = await AccountAdmin.findOne({
+		email: email,
+	});
+
+	if (!existAccount) {
+		res.json({
+			code: "error",
+			message: "Email không tồn tại trong hệ thống",
+		});
+		return;
+	}
+
+	//kiểm tra email đã tồn tại trong ForgotPassword chưa
+	const existEmailInForgotPassword = await ForgotPassword.findOne({
+		email: email,
+	});
+	if (existEmailInForgotPassword) {
+		res.json({
+			code: "error",
+			message: "Vui lòng gửi lại yêu cầu sau 5 phút",
+		});
+		return;
+	}
+
+	// tạo mã OTP
+	const otp = generateHelper.generateRandomNumber(6);
+	// lưu vào database email otp, sau 5 phút tự xóa
+	const newRecord = new ForgotPassword({
+		email: email,
+		otp: otp,
+		expireAt: Date.now() + 5 * 60 * 1000,
+	});
+	await newRecord.save();
+
+	// Gửi mã OTP qua email cho người dùng tự động
+	const subject = "Mã OTP lấy lại mật khẩu";
+	const content = `Mã OTP của bạn là <b style="color : green;">${otp}</b>. Có hiệu lực cho 5 phút, vui lòng không cung cấp cho bất kỳ ai.`;
+	mailHelper.sendMail(email, subject, content);
+
+	res.json({
+		code: "success",
+		message: "Đã gửi mã OTP qua email",
 	});
 };
 
