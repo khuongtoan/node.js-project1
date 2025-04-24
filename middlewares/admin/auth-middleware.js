@@ -1,12 +1,10 @@
 const jwt = require("jsonwebtoken");
 const AccountAdmin = require("../../models/account-admin-model");
-const { pathAdmin } = require("../../config/variable-config");
 
 module.exports.verifyToken = async (req, res, next) => {
-
 	const token = req.cookies.token;
-	
-  try {
+
+	try {
 		if (!token) {
 			res.redirect(`/${pathAdmin}/account/login`);
 			return;
@@ -26,10 +24,12 @@ module.exports.verifyToken = async (req, res, next) => {
 			res.redirect(`/${pathAdmin}/account/login`);
 			return;
 		}
+
+		req.account = existAccount;
+
+		next();
 	} catch (error) {
 		res.clearCookie("token");
 		res.redirect(`/${pathAdmin}/account/login`);
 	}
-
-	next();
 };

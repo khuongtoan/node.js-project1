@@ -145,7 +145,7 @@ if (forgotPasswordForm) {
 					}
 
 					if (data.code == "success") {
-						window.location.href = `/${pathAdmin}/account/otp-password`;
+						window.location.href = `/${pathAdmin}/account/otp-password?email=${email}`;
 					}
 				});
 		});
@@ -166,7 +166,33 @@ if (otpPasswordForm) {
 		])
 		.onSuccess((event) => {
 			const otp = event.target.otp.value;
-			console.log(otp);
+
+			const urlParams = new URLSearchParams(window.location.search);
+			const email = urlParams.get("email");
+
+			const dataFinal = {
+				otp: otp,
+				email: email,
+			};
+			console.log(dataFinal);
+
+			fetch(`/${pathAdmin}/account/otp-password`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(dataFinal),
+			})
+				.then((res) => res.json())
+				.then((data) => {
+					if (data.code == "error") {
+						alert(data.message);
+					}
+
+					if (data.code == "success") {
+						window.location.href = `/${pathAdmin}/account/reset-password`;
+					}
+				});
 		});
 }
 // End OTP Password Form
@@ -218,7 +244,28 @@ if (resetPasswordForm) {
 		])
 		.onSuccess((event) => {
 			const password = event.target.password.value;
-			console.log(password);
+
+			const dataFinal = {
+				password: password,
+			};
+
+			fetch(`/${pathAdmin}/account/reset-password`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(dataFinal),
+			})
+				.then((res) => res.json())
+				.then((data) => {
+					if (data.code == "error") {
+						alert(data.message);
+					}
+
+					if (data.code == "success") {
+						window.location.href = `/${pathAdmin}/dashboard`;
+					}
+				});
 		});
 }
 // End Reset Password Form
