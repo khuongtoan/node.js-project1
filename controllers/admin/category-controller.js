@@ -1,4 +1,5 @@
 const Category = require("../../models/category-model");
+const categoryHelper = require("../../helpers/category-helper");
 
 module.exports.list = async (req, res) => {
 	res.render("admin/pages/category-list", {
@@ -7,8 +8,17 @@ module.exports.list = async (req, res) => {
 };
 
 module.exports.create = async (req, res) => {
+	const categoryList = await Category.find({
+		deleted: false,
+	});
+
+	const categoryTree = categoryHelper.buildCategoryTree(categoryList);
+
+	console.log(categoryTree);
+
 	res.render("admin/pages/category-create", {
 		pageTitle: "Tạo danh mục",
+		categoryList: categoryTree,
 	});
 };
 
@@ -24,7 +34,6 @@ module.exports.createPost = async (req, res) => {
 	req.body.createBy = req.account.id;
 	req.body.updateBy = req.account.id;
 	req.body.avatar = req.file ? req.file.path : "";
-
 
 	const newRecord = new Category(req.body);
 	await newRecord.save();
