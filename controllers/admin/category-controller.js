@@ -14,8 +14,6 @@ module.exports.create = async (req, res) => {
 
 	const categoryTree = categoryHelper.buildCategoryTree(categoryList);
 
-	console.log(categoryTree);
-
 	res.render("admin/pages/category-create", {
 		pageTitle: "Tạo danh mục",
 		categoryList: categoryTree,
@@ -38,8 +36,9 @@ module.exports.createPost = async (req, res) => {
 	const newRecord = new Category(req.body);
 	await newRecord.save();
 
+	req.flash("success", "Tạo danh mục thành công");
+
 	res.json({
 		code: "success",
-		message: "Tạo danh mục thành công!",
 	});
 };

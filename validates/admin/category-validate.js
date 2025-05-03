@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 module.exports.createPost = (req, res, next) => {
 	const schema = Joi.object({
-		fullName: Joi.string().required().messages({
+		name: Joi.string().required().messages({
 			"string.empty": "vui lòng tên danh mục!",
 		}),
 
