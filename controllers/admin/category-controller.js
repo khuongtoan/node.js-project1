@@ -54,20 +54,81 @@ module.exports.createPost = async (req, res) => {
 		req.body.position = parseInt(req.body.position);
 	} else {
 		const totalRecord = await Category.countDocuments({});
-		req.body.position = totalRecord;
-		+1;
+		req.body.position = totalRecord + 1;
 	}
 
-	req.body.createBy = req.account.id;
 	req.body.updateBy = req.account.id;
-	req.body.avatar = req.file ? req.file.path : "";
+	if (req.file) {
+		req.body.avatar = req.file.path;
+	} else {
+		delete req.body.avatar;
+	}
 
-	const newRecord = new Category(req.body);
-	await newRecord.save();
+	await Category.updateOne(
+		{
+			_id: id,
+			delete: false,
+		}.req.body,
+	);
 
-	req.flash("success", "Tạo danh mục thành công");
+	req.flash("success", "Cập nhật danh mục thành công");
 
 	res.json({
 		code: "success",
 	});
+};
+
+module.exports.edit = async (req, res) => {
+	try {
+		const categoryList = await Category.find({
+			deleted: false,
+		});
+
+		const categoryTree = categoryHelper.buildCategoryTree(categoryList);
+
+		const id = req.params.id;
+		const categoryDetail = await Category.findOne({
+			_id: id,
+			deleted: false,
+		});
+
+		res.render("admin/pages/category-edit", {
+			pageTitle: "Chỉnh sửa danh mục",
+			categoryList: categoryTree,
+			categoryDetail: categoryDetail,
+		});
+	} catch (error) {
+		res.redirect(`/${pathAdmin}/category/list`);
+	}
+};
+
+module.exports.editPatch = async (req, res) => {
+	try {
+		const id = req.params.id;
+
+		if (req.body.position) {
+			req.body.position = parseInt(req.body.position);
+		} else {
+			const totalRecord = await Category.countDocuments({});
+			req.body.position = totalRecord + 1;
+		}
+
+		req.body.createBy = req.account.id;
+		req.body.updateBy = req.account.id;
+		req.body.avatar = req.file ? req.file.path : "";
+
+		const newRecord = new Category(req.body);
+		await newRecord.save();
+
+		req.flash("success", "Chỉnh sửa danh mục thành công");
+
+		res.json({
+			code: "success",
+		});
+	} catch (error) {
+		res.json({
+			code: "error",
+			massage: "Id không hợp lệ",
+		});
+	}
 };
