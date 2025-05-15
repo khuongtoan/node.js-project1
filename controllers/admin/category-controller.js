@@ -5,10 +5,16 @@ const AccountAdmin = require("../../models/account-admin-model");
 const categoryHelper = require("../../helpers/category-helper");
 
 module.exports.list = async (req, res) => {
-	const categoryList = await Category.find({
+	const find = {
 		deleted: false,
-	}).sort({
-		position: "asc",
+	};
+
+	if (req.query.status) {
+		find.status = req.query.status;
+	}
+
+	const categoryList = await Category.find(find).sort({
+		position: "desc",
 	});
 
 	for (const item of categoryList) {
@@ -134,26 +140,28 @@ module.exports.editPatch = async (req, res) => {
 };
 
 module.exports.deletePatch = async (req, res) => {
-	try{
+	try {
 		const id = req.params.id;
 
-		await Category.updateOne({
-			_id : id
-		},{
-			deleted : true,
-			deletedBy : req.account.id,
-			deletedAt : Date.now()
-		});
+		await Category.updateOne(
+			{
+				_id: id,
+			},
+			{
+				deleted: true,
+				deletedBy: req.account.id,
+				deletedAt: Date.now(),
+			},
+		);
 
 		req.flash("success", "Xóa danh mục thành công!");
 		res.json({
-		code : " success"
-		})
-
-	}catch(error){
+			code: " success",
+		});
+	} catch (error) {
 		res.json({
-		code : " error",
-		message : "Id Không hợp lệ!"
-		}) 
+			code: " error",
+			message: "Id Không hợp lệ!",
+		});
 	}
-}
+};
