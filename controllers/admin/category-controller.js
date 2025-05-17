@@ -13,6 +13,10 @@ module.exports.list = async (req, res) => {
 		find.status = req.query.status;
 	}
 
+	if (req.query.createdBy) {
+		find.createdBy = req.query.createdBy;
+	}
+
 	const categoryList = await Category.find(find).sort({
 		position: "desc",
 	});
@@ -20,25 +24,31 @@ module.exports.list = async (req, res) => {
 	for (const item of categoryList) {
 		if (item.createdBy) {
 			const infoAccountCreated = await AccountAdmin.findOne({
-				_id: item.createBy,
+				_id: item.createdBy,
 			});
 			item.createdByFullName = infoAccountCreated.fullName;
 		}
 
 		if (item.updatedBy) {
-			const infoAccountCreated = await AccountAdmin.findOne({
-				_id: item.updateBy,
+			const infoAccountUpdated = await AccountAdmin.findOne({
+				_id: item.updatedBy,
 			});
-			item.updatedByFullName = infoAccountCreated.fullName;
+			item.updatedByFullName = infoAccountUpdated.fullName;
 		}
 
 		item.createdAtFormat = moment(item.createdAt).format("HH:mm - DD/MM/YYYY");
-		item.updatedAtFormat = moment(item.createdAt).format("HH:mm - DD/MM/YYYY");
+		item.updatedAtFormat = moment(item.updatedAt).format("HH:mm - DD/MM/YYYY");
 	}
+
+	// Danh sách tài khoản quản trị
+	const accountAdminList = await AccountAdmin.find({}).select("id fullName");
+
+	// Hết Danh sách tài khoản quản trị
 
 	res.render("admin/pages/category-list", {
 		pageTitle: "Quản lý danh mục",
 		categoryList: categoryList,
+		accountAdminList: accountAdminList,
 	});
 };
 
@@ -63,21 +73,14 @@ module.exports.createPost = async (req, res) => {
 		req.body.position = totalRecord + 1;
 	}
 
-	req.body.updateBy = req.account.id;
-	if (req.file) {
-		req.body.avatar = req.file.path;
-	} else {
-		delete req.body.avatar;
-	}
+	req.body.createdBy = req.account.id;
+	req.body.updatedBy = req.account.id;
+	req.body.avatar = req.file ? req.file.path : "";
 
-	await Category.updateOne(
-		{
-			_id: id,
-			delete: false,
-		}.req.body,
-	);
+	const newRecord = new Category(req.body);
+	await newRecord.save();
 
-	req.flash("success", "Cập nhật danh mục thành công");
+	req.flash("success", "Tạo danh mục thành công!");
 
 	res.json({
 		code: "success",
@@ -119,14 +122,22 @@ module.exports.editPatch = async (req, res) => {
 			req.body.position = totalRecord + 1;
 		}
 
-		req.body.createBy = req.account.id;
-		req.body.updateBy = req.account.id;
-		req.body.avatar = req.file ? req.file.path : "";
+		req.body.updatedBy = req.account.id;
+		if (req.file) {
+			req.body.avatar = req.file.path;
+		} else {
+			delete req.body.avatar;
+		}
 
-		const newRecord = new Category(req.body);
-		await newRecord.save();
+		await Category.updateOne(
+			{
+				_id: id,
+				deleted: false,
+			},
+			req.body,
+		);
 
-		req.flash("success", "Chỉnh sửa danh mục thành công");
+		req.flash("success", "Cập nhật danh mục thành công!");
 
 		res.json({
 			code: "success",
@@ -134,7 +145,7 @@ module.exports.editPatch = async (req, res) => {
 	} catch (error) {
 		res.json({
 			code: "error",
-			massage: "Id không hợp lệ",
+			message: "Id không hợp lệ!",
 		});
 	}
 };
@@ -155,13 +166,14 @@ module.exports.deletePatch = async (req, res) => {
 		);
 
 		req.flash("success", "Xóa danh mục thành công!");
+
 		res.json({
-			code: " success",
+			code: "success",
 		});
 	} catch (error) {
 		res.json({
-			code: " error",
-			message: "Id Không hợp lệ!",
+			code: "error",
+			message: "Id không hợp lệ!",
 		});
 	}
 };
