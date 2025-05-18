@@ -18,7 +18,7 @@ module.exports.list = async (req, res) => {
 	}
 
 	// Lọc theo ngày tạo
-	const dateFilter ={};
+	const dateFilter = {};
 
 	if (req.query.startDate) {
 		const startDate = moment(req.query.startDate).startOf("date").toDate();
@@ -29,7 +29,7 @@ module.exports.list = async (req, res) => {
 		dateFilter.$lte = endDate;
 	}
 
-	if(Object.keys(dateFilter).length > 0){
+	if (Object.keys(dateFilter).length > 0) {
 		find.createdAt = dateFilter;
 	}
 
@@ -190,6 +190,50 @@ module.exports.deletePatch = async (req, res) => {
 		res.json({
 			code: "error",
 			message: "Id không hợp lệ!",
+		});
+	}
+};
+
+module.exports.changeMultiPatch = async (req, res) => {
+	try {
+		const { option, ids } = req.body;
+
+		switch (option) {
+			case "active":
+			case "inactive":
+				await Category.updateMany(
+					{
+						_id: { $in: ids },
+					},
+					{
+						status: option,
+					},
+				);
+				req.flash("success", "Đổi trạng thái thành công!");
+				break;
+
+			case "delete":
+				await Category.updateMany(
+					{
+						_id: { $in: ids },
+					},
+					{
+						deleted: true,
+						deletedBy: req.account.id,
+						deletedAt: Date.now(),
+					},
+				);
+				req.flash("success", "Xóa thành công!");
+				break;
+		}
+
+		res.json({
+			code: "success",
+		});
+	} catch (error) {
+		res.json({
+			code: "error",
+			message: "Id không tồn tại trong hệ thống!",
 		});
 	}
 };
