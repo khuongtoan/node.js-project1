@@ -8,13 +8,29 @@ module.exports.list = async (req, res) => {
 	const find = {
 		deleted: false,
 	};
-
+	//Lọc theo trạng thái
 	if (req.query.status) {
 		find.status = req.query.status;
 	}
-
+	// Lọc theo người tạo
 	if (req.query.createdBy) {
 		find.createdBy = req.query.createdBy;
+	}
+
+	// Lọc theo ngày tạo
+	const dateFilter ={};
+
+	if (req.query.startDate) {
+		const startDate = moment(req.query.startDate).startOf("date").toDate();
+		dateFilter.$gte = startDate;
+	}
+	if (req.query.endDate) {
+		const endDate = moment(req.query.endDate).endOf("date").toDate();
+		dateFilter.$lte = endDate;
+	}
+
+	if(Object.keys(dateFilter).length > 0){
+		find.createdAt = dateFilter;
 	}
 
 	const categoryList = await Category.find(find).sort({
