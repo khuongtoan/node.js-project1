@@ -1,5 +1,5 @@
 const moment = require("moment");
-const slugify= require("slugify");
+const slugify = require("slugify");
 const Category = require("../../models/category-model");
 const AccountAdmin = require("../../models/account-admin-model");
 
@@ -43,9 +43,39 @@ module.exports.list = async (req, res) => {
 		find.slug = keywordRegex;
 	}
 
-	const categoryList = await Category.find(find).sort({
-		position: "desc",
-	});
+	// Phân trang
+	const limitItems = 5;
+	let page = 1;
+	if (req.query.page) {
+		const currentPage = parseInt(req.query.page);
+		if (currentPage > 0) {
+			page = currentPage;
+		}
+	}
+	const totalRecord = await Category.countDocuments(find);
+	const totalPage = Math.ceil(totalRecord / limitItems);
+
+	if (page > totalPage) {
+		page = totalPage;
+	}
+
+	let skip = (page - 1) * limitItems;
+	if (skip < 0) {
+		skip = 0;
+	}
+	const pagination = {
+		skip: skip,
+		totalRecord: totalRecord,
+		totalPage: totalPage,
+	};
+	// Hết phân trang
+
+	const categoryList = await Category.find(find)
+		.sort({
+			position: "desc",
+		})
+		.limit(limitItems)
+		.skip(skip);
 
 	for (const item of categoryList) {
 		if (item.createdBy) {
@@ -75,6 +105,7 @@ module.exports.list = async (req, res) => {
 		pageTitle: "Quản lý danh mục",
 		categoryList: categoryList,
 		accountAdminList: accountAdminList,
+		pagination: pagination,
 	});
 };
 
