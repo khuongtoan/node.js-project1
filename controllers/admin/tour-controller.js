@@ -240,12 +240,34 @@ module.exports.undoPatch = async (req, res) => {
 		await Tour.updateOne(
 			{
 				_id: id,
-			},{
+			},
+			{
 				deleted: false,
 			},
 		);
 
 		req.flash("success", "Khôi phục tour thành công!");
+
+		res.json({
+			code: "success",
+		});
+	} catch (error) {
+		res.json({
+			code: "error",
+			message: "Id không hợp lệ!",
+		});
+	}
+};
+
+module.exports.deleteDestroyPatch = async (req, res) => {
+	try {
+		const id = req.params.id;
+
+		await Tour.deleteOne({
+			_id: id,
+		});
+
+		req.flash("success", "Đã xóa tour vĩnh viễn!");
 
 		res.json({
 			code: "success",

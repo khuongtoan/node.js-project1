@@ -25,5 +25,6 @@ router.patch("/delete/:id", tourController.deletePatch);
 
 router.patch("/undo/:id", tourController.undoPatch);
 
+router.patch("/delete-destroy/:id", tourController.deleteDestroyPatch);
 
 module.exports = router;
