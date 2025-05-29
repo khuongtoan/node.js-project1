@@ -279,3 +279,46 @@ module.exports.deleteDestroyPatch = async (req, res) => {
 		});
 	}
 };
+
+module.exports.trashChangeMultiPatch = async (req, res) => {
+	try {
+		const { option, ids } = req.body;
+
+		switch (option) {
+			case "undo":
+				await Category.updateMany(
+					{
+						_id: { $in: ids },
+					},
+					{
+						deleted: false,
+					},
+				);
+				req.flash("success", "Khôi phục thành công!");
+				break;
+
+			case "delete-destroy":
+				await Category.deleteMany(
+					{
+						_id: { $in: ids },
+					},
+					{
+						deleted: true,
+						deletedBy: req.account.id,
+						deletedAt: Date.now(),
+					},
+				);
+				req.flash("success", "Xóa vĩnh viễn thành công!");
+				break;
+		}
+
+		res.json({
+			code: "success",
+		});
+	} catch (error) {
+		res.json({
+			code: "error",
+			message: "Id không tồn tại trong hệ thống!",
+		});
+	}
+};
