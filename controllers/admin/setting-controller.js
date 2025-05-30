@@ -65,15 +65,20 @@ module.exports.accountAdminCreate = async (req, res) => {
 };
 
 module.exports.roleList = async (req, res) => {
+	const roleList = await Role.find({
+		deleted: false,
+	});
+
 	res.render("admin/pages/setting-role-list", {
 		pageTitle: "Nhóm quyền",
+		roleList: roleList,
 	});
 };
 
 module.exports.roleCreate = async (req, res) => {
 	res.render("admin/pages/setting-role-create", {
 		pageTitle: "Tạo nhóm quyền",
-    permissionList: permissionConfig.permissionList
+		permissionList: permissionConfig.permissionList,
 	});
 };
 
